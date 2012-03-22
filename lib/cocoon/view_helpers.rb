@@ -68,7 +68,7 @@ module Cocoon
         html_options[:'data-association'] = association.to_s.singularize
         html_options[:'data-associations'] = association.to_s.pluralize
 
-        new_object = create_object(f, association)
+        new_object = create_object(f, association, options[:custom_class_name])
         html_options[:'data-template'] = CGI.escapeHTML(render_association(association, f, new_object, render_options, options[:partial])).html_safe
 
         link_to(name, '#', html_options )
@@ -79,10 +79,14 @@ module Cocoon
     # `` has_many :admin_comments, class_name: "Comment", conditions: { author: "Admin" }
     # will create new Comment with author "Admin"
 
-    def create_object(f, association)
+    def create_object(f, association, custom_class_name=nil)
       assoc      = f.object.class.reflect_on_association(association)
       conditions = assoc.respond_to?(:conditions) ? assoc.conditions.flatten : []
-      new_object = assoc.klass.new(*conditions)
+      if custom_class_name
+        new_object = custom_class_name.constantize.new(*conditions)
+      else
+        new_object = assoc.klass.new(*conditions)
+      end
     end
 
     def setup_partial(partial, association)
